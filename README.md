@@ -53,7 +53,7 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 - Book a specific washer or dryer for a set time slot
 - Live view of which machines in a hall are free, running, or done
 - Reminders before pickup so machines get cleared promptly
-- Cycle-completion tracking to discourage machine-hogging
+- Cycle completion tracking to discourage machine-hogging
 - Usage data to help facilities staff spot broken or overused machines
 
 #### (Feature set will be refined as the project moves from product vision into design and development.)
@@ -80,16 +80,16 @@ Example:
 
 ## Roadmap
 #### Next steps for the group:
-1. Validate the domain questions — short resident survey on peak-hour frustration and current coordination habits.
-2. Sketch the booking flow — wireframe the reserve-a-slot and cycle-reminder experience for one laundry room.
-3. Prototype the machine map — low-fidelity mockup of a live view of a hall's washers and dryers.
+1. Validate the domain questions, short resident survey on peak-hour frustration and current coordination habits.
+2. Sketch the booking flow, wireframe the reserve-a-slot and cycle-reminder experience for one laundry room.
+3. Prototype the machine map, low-fidelity mockup of a live view of a hall's washers and dryers.
 
 
 ## Contributing
 1. Fork the repository.
-2. Create a new branch: git checkout -b feature-name.
+2. Create a new branch: git checkout -b DormWash.
 3. Make your changes.
-4. Push your branch: git push origin feature-name.
+4. Push your branch: git push origin DormWash.
 5. Create a pull request.
 
 
