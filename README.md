@@ -49,7 +49,7 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 #### Secondary — Residence Life & facilities staff, who manage machine uptime and want usage data to plan repairs. Reservation and cycle data can flag a chronically broken machine long before a paper complaint would.
 
 
-##Features
+## Features
 - Book a specific washer or dryer for a set time slot
 - Live view of which machines in a hall are free, running, or done
 - Reminders before pickup so machines get cleared promptly
