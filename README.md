@@ -3,8 +3,8 @@ A reservation app that lets residents book a specific washer or dryer and time s
 
 ## Table of Contents
 [About the Project](#abouttheproject)|
-[The Problem](#theproblem)|
-[Who It's For](#whoit'sfor)| 
+[The Problem](#the problem)|
+[Who It's For](#who it's for)| 
 [Features](#features)|
 [Installation](#installation)|
 [Usage](#usage)|
