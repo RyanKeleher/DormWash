@@ -16,7 +16,7 @@ A reservation app that lets residents book a specific washer or dryer and time s
 
 ## About the Project
 Students don't mind doing laundry, in fact its essential. However they do mind the uncertainty, making a trip to the laundry room with all of their clothes just to find all of the machines running or hogged is never a good thing. 
-#### Using Moore's Vision Template: 
+### Using Moore's Vision Template: 
 #### For 
 - Students living on campus in dorms or residence halls.
 #### Who
@@ -30,4 +30,4 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 #### Our Product
 - Guarantees the machine is free when you arrive and nudges people to clear their laundry on time.
 
-
+#### DormWash exists to guarantee the machine is free — not just tell you where the machines are.
