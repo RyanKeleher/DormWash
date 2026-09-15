@@ -4,7 +4,7 @@ A reservation app that lets residents book a specific washer or dryer and time s
 ## Table of Contents
 [About the Project](#abouttheproject)|
 [Problem](#problem)|
-[Who](#who)| 
+[Audience](#who)| 
 [Features](#features)|
 [Installation](#installation)|
 [Usage](#usage)|
@@ -33,14 +33,14 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 #### DormWash exists to guarantee the machine is free, not just tell you where the machines are.
 
 
-## The Problem
+## Problem
 ### Three questions drove our research.
 - What actually causes a wasted trip? Machines that are broken, no visibility into what's free, or loads left sitting after a cycle ends.
 - How do students coordinate machine use today? Paper sign-up sheets, group chats, or just guessing and hoping.
 - What makes a reservation actually trustworthy? Handling no-shows and machines blocked by someone else's finished laundry.
 
 
-## Who It's For
+## Audience
 #### Primary — Residence hall students, especially in dorms where machines are scarce relative to residents and peak-hour competition is a pain point:
 - First-year residents
 - Students without a car
