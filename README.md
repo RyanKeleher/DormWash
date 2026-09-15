@@ -2,16 +2,16 @@
 A reservation app that lets residents book a specific washer or dryer and time slot, and tracks whether the cycle is actually done.
 
 ## Table of Contents
-###1.[About the Project](#abouttheproject)
-###2.[The Problem](#theproblem)
-###3.[Who It's For](#whoit'sfor) 
-###4.[Features](#features)
-###5.[Installation](#installation)
-###6.[Usage](#usage)
-###7.[Roadmap](#roadmap)
-###8.[Contributing](#contribution)
-###9.[License](#license)
-###10.[Sources](#sources)
+###[About the Project](#abouttheproject)|
+###[The Problem](#theproblem)|
+###[Who It's For](#whoit'sfor)| 
+###[Features](#features)|
+###[Installation](#installation)|
+###[Usage](#usage)|
+###[Roadmap](#roadmap)|
+###[Contributing](#contribution)|
+###[License](#license)|
+###[Sources](#sources)|
 
 
 ## About the Project
