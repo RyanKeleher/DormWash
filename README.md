@@ -61,13 +61,13 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 
 ## Installation
 #### 1. Clone the Repository
-'''bash
+' ' 'bash
    git clone https://github.com/yourusername/dormwash.git
-   '''
+   ' ' '
 #### 2. Install Dependencies
-'''bash
+' ' 'bash
    npm install
-   '''
+   ' ' '
 
 
 ## Usage
