@@ -75,7 +75,38 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 Example:
 ```bash
    npm start
-   ``` 
+   ```
+## Saving Code
+####  3. Saving new Code
+Example:
+```bash
+   git add .
+git commit -m "Update DormWash UI features"
+   ```
+## Downloading Code
+#### 4. If new code needs to be added.
+Example:
+```bash
+   git checkout main
+git pull origin main
+   ```
+
+## Stacking Code
+#### 5. Updating the main branch
+Example:
+```bash
+   git checkout ui-updates
+git rebase main
+   ```
+
+## Merge and Push Github
+#### 6. Push so team can see the new code.
+Example:
+```bash
+   git checkout main
+git merge ui-updates
+git push origin main
+```
 
 
 ## Roadmap
