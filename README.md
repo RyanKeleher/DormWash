@@ -64,51 +64,47 @@ Students don't mind doing laundry, in fact its essential. However they do mind t
 ```bash
    git clone https://github.com/yourusername/dormwash.git
    ```
-#### 2. Install Dependencies
+## Directory
+#### 1. Change Directory
 ```bash
-   npm install
-   ```
-
-
-## Usage
-#### To be added once there's a running app to document. 
-Example:
-```bash
-   npm start
-   ```
-## Saving Code
-####  3. Saving new Code
-Example:
-```bash
-   git add .
-git commit -m "Update DormWash UI features"
-   ```
-## Downloading Code
-#### 4. If new code needs to be added.
-Example:
-```bash
-   git checkout main
-git pull origin main
-   ```
-
-## Stacking Code
-#### 5. Updating the main branch
-Example:
-```bash
-   git checkout ui-updates
-git rebase main
-   ```
-
-## Merge and Push Github
-#### 6. Push so team can see the new code.
-Example:
-```bash
-   git checkout main
-git merge ui-updates
-git push origin main
+cd ~/DormWash
 ```
-
-
+## Switch and Check branch
+#### 2. Go to Main branch and check if it's up to date.
+```bash
+git status
+```
+## Pull Main
+#### 3. Pull the main branch 
+```bash
+git pull origin main From https://github.com/RyanKeleher/DormWash
+```
+## Making Branch
+#### 4. Creating the branch directory
+```
+git checkout -b "Branch Name"
+```
+## Status Checking
+#### 5. Checking what branch you are in
+```
+git status
+```
+## Copying
+#### 6. Coping files to branch
+```
+ cp ~/SwiftCode/WasherTimerView.swift .
+cp /Users/username/Desktop/SwiftCode/WasherTimerView.swift .
+```
+## Adding
+#### 7. Adding files to branch
+```
+git add WasherTimerView.swift DormWash.swift
+```
+## Commit
+#### 8. Git commiting
+```
+git commit -m "Add WasherTimer UI"
+```
 ## Roadmap
 #### Next steps for the group:
 1. Validate the domain questions, short resident survey on peak-hour frustration and current coordination habits.
