@@ -103,7 +103,7 @@ git add WasherTimerView.swift DormWash.swift
 ## Commit
 #### 8. Git commiting
 ```
-git commit -m "Add WasherTimer UI"
+git commit -m "Add BrancName UI"
 ```
 ## Roadmap
 #### Next steps for the group:
