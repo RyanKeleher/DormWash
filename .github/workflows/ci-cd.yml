@@ -1,0 +1,119 @@
+# DormWash CI/CD
+#
+# CI (every push and pull request):
+#   - ios:    builds the SwiftUI code and runs the unit tests on an iPhone simulator
+#   - server: installs the Node server and runs its smoke test
+#
+# CD (only after both pass on main):
+#   - deploy: packages the server as a downloadable build, and redeploys it
+#             to Render if a RENDER_DEPLOY_HOOK_URL secret has been added
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# If you push again before a run finishes, cancel the old run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS build & tests
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Pick an iPhone simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            echo "No iPhone simulator found on this runner"; exit 1
+          fi
+          echo "Using simulator $UDID"
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+
+      - name: Build and test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme DormWash \
+            -destination "id=$SIM_UDID" \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: TestResults.xcresult
+          if-no-files-found: ignore
+
+  server:
+    name: Server smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run smoke test
+        run: npm test
+
+  deploy:
+    name: Deploy
+    needs: [ios, server]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Package the server
+        run: |
+          cd server
+          npm ci --omit=dev
+          cd ..
+          tar -czf dormwash-server.tar.gz server
+
+      - name: Upload server build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dormwash-server-${{ github.sha }}
+          path: dormwash-server.tar.gz
+
+      - name: Deploy to Render (if configured)
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::notice::No RENDER_DEPLOY_HOOK_URL secret set, so skipping the live deploy. The packaged server is attached to this run."
+            exit 0
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+          echo "Deploy triggered on Render."
