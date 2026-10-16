@@ -51,7 +51,7 @@ final class LaundryStatusViewModel: ObservableObject {
     init() {
         // Sample data — replace with real machine/session data.
         cycle = LaundryCycle(
-            machineName: "Washer 3B",
+            machineName: "Washer W1",
             stage: .washing,
             totalDuration: 45 * 60,
             remaining: 27 * 60 + 15

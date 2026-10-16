@@ -14,6 +14,9 @@ import SwiftUI
 // MARK: - ===== Washer Screen =====
 
 struct WasherTimerView: View {
+    // The machine this screen shows; also used for problem reports
+    var machineID: String = "W1"
+
     // Standard timer state
     @State private var timeRemaining = 2700 // 45 minutes in seconds
     @State private var isSpinning = false
@@ -33,7 +36,7 @@ struct WasherTimerView: View {
     var body: some View {
         VStack(spacing: 40) {
             
-            Text("Washer #1 Status")
+            Text("Washer \(machineID) Status")
                 .font(.title2)
                 .bold()
 
@@ -110,11 +113,20 @@ struct WasherTimerView: View {
         }
         // Slides the report form up from the bottom when the button is tapped
         .sheet(isPresented: $showReportForm) {
-            ReportIssueView(machineID: "W4")
+            ReportIssueView(machineID: machineID)
         }
         .onAppear {
             // Start the spinning animation when the view loads
-            isSpinning = true
+            isSpinning = timeRemaining > 0
+        }
+        // Count down once per second; SwiftUI cancels this when the view goes away
+        .task {
+            while timeRemaining > 0 {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if Task.isCancelled { return }
+                timeRemaining -= 1
+            }
+            isSpinning = false
         }
     }
 
@@ -136,6 +148,7 @@ struct ReportIssueView: View {
     @State private var details = ""
     @State private var alertMessage: String?
     @State private var didSend = false
+    @State private var isSending = false
 
     // Lets this screen close itself
     @Environment(\.dismiss) private var dismiss
@@ -166,10 +179,11 @@ struct ReportIssueView: View {
                         .foregroundColor(.secondary)
                 }
 
-                Button("Send to Maintenance") {
+                Button(isSending ? "Sending…" : "Send to Maintenance") {
                     submit()
                 }
                 .frame(maxWidth: .infinity)
+                .disabled(isSending)
             }
             .navigationTitle("Report a Problem")
             .alert(alertMessage ?? "", isPresented: Binding(
@@ -191,10 +205,18 @@ struct ReportIssueView: View {
             return
         }
 
-        service.sendRequest(request)
-        didSend = true
-        alertMessage = "Thanks! Maintenance has been notified."
-        details = ""
+        isSending = true
+        Task {
+            defer { isSending = false }
+            do {
+                try await service.upload(request)
+                didSend = true
+                alertMessage = "Thanks! Maintenance has been notified."
+                details = ""
+            } catch {
+                alertMessage = "Couldn't reach maintenance. Please try again."
+            }
+        }
     }
 }
 
@@ -259,9 +281,18 @@ func validate(_ request: MaintenanceRequest) -> RequestError? {
     return nil
 }
 
-// MARK: - Sending (mocked: no real network yet)
+// MARK: - Sending
+
+enum MaintenanceServiceError: Error {
+    case invalid(RequestError)
+    case badResponse(statusCode: Int)
+}
 
 final class MaintenanceService {
+    /// Where the DormWash server (server/index.js) is running.
+    /// Change this to your Render URL when the server is deployed.
+    static let baseURL = URL(string: "http://localhost:3000")!
+
     /// Requests that went to the maintenance team.
     private(set) var sent: [MaintenanceRequest] = []
     /// Requests that went to the developer test inbox (toDev: true).
@@ -281,6 +312,31 @@ final class MaintenanceService {
             sent.append(request)
         }
         return true
+    }
+
+    /// Posts a request to the server's /maintenance-requests endpoint,
+    /// then records it in `sent`. Throws if it is invalid or the server rejects it.
+    @MainActor
+    func upload(_ request: MaintenanceRequest, session: URLSession = .shared) async throws {
+        if let problem = validate(request) {
+            throw MaintenanceServiceError.invalid(problem)
+        }
+
+        var urlRequest = URLRequest(url: Self.baseURL.appendingPathComponent("maintenance-requests"))
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: [
+            "machineID": request.machineID,
+            "issue": request.issue.rawValue,
+            "details": request.details,
+        ])
+
+        let (_, response) = try await session.data(for: urlRequest)
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard statusCode == 201 else {
+            throw MaintenanceServiceError.badResponse(statusCode: statusCode)
+        }
+        sendRequest(request)
     }
 }
 
