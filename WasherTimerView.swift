@@ -33,7 +33,7 @@ struct WasherTimerView: View {
     var body: some View {
         VStack(spacing: 40) {
             
-            Text("Washer #4 Status")
+            Text("Washer #1 Status")
                 .font(.title2)
                 .bold()
 
@@ -47,18 +47,18 @@ struct WasherTimerView: View {
 
                 // Outer Door Ring
                 Circle()
-                    .stroke(Color.black.opacity(0.5), lineWidth: 15)
+                    .stroke(Color.red.opacity(0.5), lineWidth: 15)
                     .frame(width: 200, height: 200)
                 
                 // Inner Glass
                 Circle()
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.black.opacity(0.1))
                     .frame(width: 190, height: 190)
 
                 // 2. Animated Water Indicator
                 Circle()
                     .trim(from: 0.0, to: 0.6)
-                    .stroke(Color.blue.opacity(0.7), style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .stroke(Color.white.opacity(0.7), style: StrokeStyle(lineWidth: 12, lineCap: .round))
                     .frame(width: 160, height: 160)
                     .rotationEffect(.degrees(isSpinning ? 360 : 0))
                     .animation(isSpinning ? Animation.linear(duration: 1.5).repeatForever(autoreverses: false) : .default, value: isSpinning)
