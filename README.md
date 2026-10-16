@@ -1,4 +1,6 @@
 # DormWash
+[![CI/CD](https://github.com/RyanKeleher/DormWash/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/RyanKeleher/DormWash/actions/workflows/ci-cd.yml)
+
 A reservation app that lets residents book a specific washer or dryer and time slot, and tracks whether the cycle is actually done.
 
 ## Table of Contents
@@ -105,6 +107,17 @@ git add WasherTimerView.swift DormWash.swift
 ```
 git commit -m "Add BrancName UI"
 ```
+## CI/CD
+Every push and pull request runs the [CI/CD workflow](.github/workflows/ci-cd.yml) on GitHub Actions:
+- **iOS build & tests**: builds the SwiftUI code on a Mac runner and runs the unit tests in `Tests/DormWashTests` on an iPhone simulator.
+- **Server smoke test**: installs the Node server in `server/` and checks every endpoint (`npm test`).
+- **Deploy** (only on `main`, after both pass): packages the server as a downloadable build on the run page. If a `RENDER_DEPLOY_HOOK_URL` repository secret is set, it also redeploys the server on Render.
+
+#### Running the checks yourself
+- iOS: open this folder in Xcode (it opens as a Swift package), then press **Cmd+U**. When you add a new `.swift` file, add its name to `sources` in `Package.swift`.
+- Server: `cd server && npm install && npm test`
+
+
 ## Roadmap
 #### Next steps for the group:
 1. Validate the domain questions, short resident survey on peak-hour frustration and current coordination habits.
