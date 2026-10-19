@@ -47,7 +47,7 @@ struct WasherTimerView: View {
 
                 // Outer Door Ring
                 Circle()
-                    .stroke(Color.red.opacity(0.5), lineWidth: 15)
+                    .stroke(Color.white.opacity(0.5), lineWidth: 15)
                     .frame(width: 200, height: 200)
                 
                 // Inner Glass
