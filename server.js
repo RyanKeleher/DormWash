@@ -60,10 +60,10 @@ const boardPage = `<!doctype html>
   <style>
     :root {
       --bg: #f4f5f7; --card: #ffffff; --text: #16181d; --muted: #6b7280;
-      --ring: #e5e7eb; --washing: #2563eb; --drying: #d97706; --done: #16a34a;
+      --ring: #e5e7eb; --washing: #2563eb; --drying: #dc2626; --done: #16a34a;
     }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #0f1115; --card: #1a1d23; --text: #f3f4f6; --muted: #9ca3af; --ring: #2c3038; }
+      :root { --bg: #0f1115; --card: #1a1d23; --text: #f3f4f6; --muted: #9ca3af; --ring: #2c3038; --drying: #ef4444; }
     }
     * { box-sizing: border-box; }
     body {
