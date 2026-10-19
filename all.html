@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DormWash · All Machines</title>
+  <!-- Dryer board, washer page and maintenance reports on one screen, shown at "/all" -->
+  <style>
+    :root {
+      --bg: #f4f5f7; --card: #ffffff; --text: #16181d; --muted: #6b7280; --line: #e5e7eb;
+      --red: #dc2626; --chip: #f3f4f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f1115; --card: #1a1d23; --text: #f3f4f6; --muted: #9ca3af; --line: #2c3038;
+        --red: #f87171; --chip: #23272f; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex; flex-direction: column; align-items: center; padding: 32px 16px;
+    }
+    h1 { margin: 0 0 4px; font-size: 28px; }
+    .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+
+    .grid {
+      width: 100%; max-width: 1400px; display: grid; gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    }
+    .panel { background: var(--card); border-radius: 20px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--line); font-weight: 600; }
+    .panel-head a { color: var(--muted); font-size: 13px; font-weight: 500; text-decoration: none; }
+    .panel-head a:hover { color: var(--text); }
+    iframe { width: 100%; height: 860px; border: 0; display: block; background: var(--bg); }
+
+    .reports { padding: 12px; display: flex; flex-direction: column; gap: 10px;
+      height: 860px; overflow-y: auto; }
+    .count { background: var(--chip); color: var(--muted); border-radius: 999px;
+      padding: 2px 10px; font-size: 13px; font-weight: 600; }
+    .report { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+    .report-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .issue { font-weight: 600; color: var(--red); }
+    .when { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .machine { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .details { margin-top: 8px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+    .empty { color: var(--muted); text-align: center; margin: auto; padding: 24px; line-height: 1.5; }
+    .footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>DormWash</h1>
+  <p class="sub">Every machine and report on one screen</p>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head">🌀 Dryer <a href="/" target="_top">Open ↗</a></div>
+      <iframe src="/" title="Dryer board"></iframe>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">🫧 Washer <a href="/washer" target="_top">Open ↗</a></div>
+      <iframe src="/washer" title="Washer page"></iframe>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">🛠️ Maintenance reports <span class="count" id="count">0</span></div>
+      <div class="reports" id="reports">
+        <p class="empty">Loading reports…</p>
+      </div>
+    </section>
+  </div>
+
+  <p class="footer" id="updated">Reports refresh every 5 seconds</p>
+
+  <script>
+    const list = document.getElementById("reports");
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    async function loadReports() {
+      try {
+        const res = await fetch("/reports");
+        const reports = (await res.json()).slice().reverse();   // newest first
+        document.getElementById("count").textContent = reports.length;
+        list.innerHTML = reports.length
+          ? reports.map(r => `
+              <div class="report">
+                <div class="report-top">
+                  <span class="issue">${escapeHtml(r.issue)}</span>
+                  <span class="when">${new Date(r.createdAt).toLocaleTimeString()}</span>
+                </div>
+                <div class="machine">Machine ${escapeHtml(r.machineID)} · Report #${r.id}</div>
+                ${r.details ? `<div class="details">${escapeHtml(r.details)}</div>` : ""}
+              </div>`).join("")
+          : `<p class="empty">No reports yet.<br>Tap <b>Report a Problem</b> on the washer to send one.</p>`;
+        document.getElementById("updated").textContent = "Reports updated " + new Date().toLocaleTimeString();
+      } catch {
+        document.getElementById("updated").textContent = "Can't reach the server — retrying…";
+      }
+    }
+
+    loadReports();
+    setInterval(loadReports, 5000);
+  </script>
+</body>
+</html>
