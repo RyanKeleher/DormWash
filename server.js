@@ -1,4 +1,26 @@
 const http = require("http");
+const fs = require("fs");
+const path = require("path");
+
+// Web version of WasherTimerView.swift, shown at "/washer"
+const washerPage = fs.readFileSync(path.join(__dirname, "washer.html"), "utf8");
+
+// Maintenance reports sent from the washer page (kept in memory for now,
+// so they reset whenever Render restarts the server)
+const reports = [];
+const ISSUES = ["Won't start", "Leaking", "Won't drain", "Door stuck", "Other"];
+
+// Same rules as validate() in WasherTimerView.swift
+function validateReport(r) {
+  const id = String(r.machineID || "").trim();
+  const details = String(r.details || "").trim();
+  if (!id) return "Please enter the machine number.";
+  if (id.length > 10) return "Machine number is too long.";
+  if (!ISSUES.includes(r.issue)) return "Please pick what's wrong.";
+  if (r.issue === "Other" && !details) return "Please describe the problem.";
+  if (details.length > 500) return "Description is too long.";
+  return null;
+}
 
 const port = process.env.PORT || 3000;
 
@@ -160,6 +182,50 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       message: "DormWash server is running"
     }));
+    return;
+  }
+
+  if (req.url === "/washer" && req.method === "GET") {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.writeHead(200);
+    res.end(washerPage);
+    return;
+  }
+
+  if (req.url === "/reports" && req.method === "GET") {
+    res.setHeader("Content-Type", "application/json");
+    res.writeHead(200);
+    res.end(JSON.stringify(reports));
+    return;
+  }
+
+  if (req.url === "/reports" && req.method === "POST") {
+    let body = "";
+    req.on("data", chunk => {
+      body += chunk;
+      if (body.length > 10000) req.destroy();   // ignore oversized requests
+    });
+    req.on("end", () => {
+      res.setHeader("Content-Type", "application/json");
+      let data;
+      try { data = JSON.parse(body); } catch { data = null; }
+      const problem = data ? validateReport(data) : "Invalid request.";
+      if (problem) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: problem }));
+        return;
+      }
+      const report = {
+        id: reports.length + 1,
+        machineID: data.machineID.trim(),
+        issue: data.issue,
+        details: String(data.details || "").trim(),
+        createdAt: new Date().toISOString()
+      };
+      reports.push(report);
+      res.writeHead(201);
+      res.end(JSON.stringify(report));
+    });
     return;
   }
 
