@@ -52,7 +52,7 @@ const boardPage = `<!doctype html>
     <div class="ring">
       <svg width="200" height="200" viewBox="0 0 200 200">
         <circle cx="100" cy="100" r="88" fill="none" stroke="var(--ring)" stroke-width="12"/>
-        <circle id="progress" cx="100" cy="100" r="88" fill="none" stroke="var(--washing)"
+        <circle id="progress" cx="100" cy="100" r="88" fill="none" stroke="var(--drying)"
                 stroke-width="12" stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="553"/>
       </svg>
       <div class="inner">
@@ -69,7 +69,7 @@ const boardPage = `<!doctype html>
   <script>
     const CIRCUMFERENCE = 2 * Math.PI * 88;
     const colors = { Washing: "var(--washing)", Drying: "var(--drying)", Done: "var(--done)" };
-    let remaining = 0, total = 2700, stage = "Washing";
+    let remaining = 0, total = 2700, stage = "Drying";
 
     function render() {
       const m = String(Math.floor(remaining / 60)).padStart(2, "0");
@@ -115,8 +115,8 @@ const server = http.createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.writeHead(200);
     res.end(JSON.stringify({
-      machineName: "Washer 3B",
-      stage: "Washing",
+      machineName: "Dryer 3B",
+      stage: "Drying",
       remainingSeconds: 1590,
       totalSeconds: 2700
     }));
