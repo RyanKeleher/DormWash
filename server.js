@@ -70,6 +70,16 @@ const boardPage = `<!doctype html>
     const CIRCUMFERENCE = 2 * Math.PI * 88;
     const colors = { Washing: "var(--washing)", Drying: "var(--drying)", Done: "var(--done)" };
     let remaining = 0, total = 2700, stage = "Drying", loaded = false;
+    let cycleStart = 0;   // the moment (in ms) the current cycle showed 45:00
+
+    // Work out the time left from the clock, so the countdown stays right
+    // even if the browser pauses the page (background tab, sleep, etc.).
+    // A cycle shows every second from 45:00 down to 0:00, then starts over.
+    function timeLeft() {
+      const period = total + 1;
+      const elapsed = Math.floor((Date.now() - cycleStart) / 1000);
+      return total - (((elapsed % period) + period) % period);
+    }
 
     function render() {
       const m = String(Math.floor(remaining / 60)).padStart(2, "0");
@@ -89,8 +99,9 @@ const boardPage = `<!doctype html>
       try {
         const res = await fetch("/machines");
         const data = await res.json();
-        remaining = data.remainingSeconds;
         total = data.totalSeconds || 2700;
+        cycleStart = Date.now() - (total - data.remainingSeconds) * 1000;
+        remaining = timeLeft();
         stage = data.stage;
         loaded = true;
         document.getElementById("machine").textContent = data.machineName;
@@ -103,14 +114,17 @@ const boardPage = `<!doctype html>
       }
     }
 
-    // Count down every second (after 0:00, start the next cycle at 45:00),
-    // and re-sync with the server every 30 seconds
+    // Update the display a few times a second, re-sync with the server every
+    // 30 seconds, and re-sync right away when you come back to the tab
     setInterval(() => {
       if (!loaded) return;
-      remaining = remaining > 0 ? remaining - 1 : total;
-      render();
-    }, 1000);
+      const next = timeLeft();
+      if (next !== remaining) { remaining = next; render(); }
+    }, 250);
     setInterval(load, 30000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") load();
+    });
     load();
   </script>
 </body>
@@ -122,7 +136,8 @@ const boardPage = `<!doctype html>
 const CYCLE_SECONDS = 45 * 60;
 
 function secondsLeftInCycle() {
-  const elapsed = Math.floor(Date.now() / 1000) % CYCLE_SECONDS;
+  // CYCLE_SECONDS + 1 steps so both 45:00 and 0:00 are shown
+  const elapsed = Math.floor(Date.now() / 1000) % (CYCLE_SECONDS + 1);
   return CYCLE_SECONDS - elapsed;
 }
 
