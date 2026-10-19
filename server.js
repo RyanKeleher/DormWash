@@ -69,7 +69,7 @@ const boardPage = `<!doctype html>
   <script>
     const CIRCUMFERENCE = 2 * Math.PI * 88;
     const colors = { Washing: "var(--washing)", Drying: "var(--drying)", Done: "var(--done)" };
-    let remaining = 0, total = 2700, stage = "Drying";
+    let remaining = 0, total = 2700, stage = "Drying", loaded = false;
 
     function render() {
       const m = String(Math.floor(remaining / 60)).padStart(2, "0");
@@ -92,6 +92,7 @@ const boardPage = `<!doctype html>
         remaining = data.remainingSeconds;
         total = data.totalSeconds || 2700;
         stage = data.stage;
+        loaded = true;
         document.getElementById("machine").textContent = data.machineName;
         document.getElementById("dot").className = "dot live";
         document.getElementById("updated").textContent = "Live · updated " + new Date().toLocaleTimeString();
@@ -102,13 +103,28 @@ const boardPage = `<!doctype html>
       }
     }
 
-    // Count down every second, re-sync with the server every 30 seconds
-    setInterval(() => { if (remaining > 0) { remaining--; render(); } }, 1000);
+    // Count down every second (after 0:00, start the next cycle at 45:00),
+    // and re-sync with the server every 30 seconds
+    setInterval(() => {
+      if (!loaded) return;
+      remaining = remaining > 0 ? remaining - 1 : total;
+      render();
+    }, 1000);
     setInterval(load, 30000);
     load();
   </script>
 </body>
 </html>`;
+
+// Demo cycle: runs 45:00 down to 0:00, then starts over at 45:00.
+// It's based on the clock, so every viewer sees the same time and
+// a server restart doesn't reset it.
+const CYCLE_SECONDS = 45 * 60;
+
+function secondsLeftInCycle() {
+  const elapsed = Math.floor(Date.now() / 1000) % CYCLE_SECONDS;
+  return CYCLE_SECONDS - elapsed;
+}
 
 const server = http.createServer((req, res) => {
   if (req.url === "/machines" && req.method === "GET") {
@@ -117,8 +133,8 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       machineName: "Dryer 3B",
       stage: "Drying",
-      remainingSeconds: 1590,
-      totalSeconds: 2700
+      remainingSeconds: secondsLeftInCycle(),
+      totalSeconds: CYCLE_SECONDS
     }));
     return;
   }
