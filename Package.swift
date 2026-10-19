@@ -20,7 +20,7 @@ let package = Package(
             name: "DormWash",
             path: ".",
             exclude: [
-                "Tests", "server", "server.js", "package.json",
+                "Tests", "server", "server.js", "package.json", "washer.html", "all.html",
                 "README.md", "LICENSE"
             ],
             sources: [

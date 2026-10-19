@@ -2,8 +2,34 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
+// Tabs added to the top of each page so you can switch between them.
+// They hide themselves when a page is shown inside the "/all" screen.
+const navBar = `
+  <style>
+    .dw-nav { display: flex; gap: 4px; padding: 4px; margin-bottom: 24px; border-radius: 999px;
+      background: rgba(127,127,127,.14); font: 600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .dw-nav a { color: inherit; text-decoration: none; padding: 7px 14px; border-radius: 999px; opacity: .7; }
+    .dw-nav a:hover { opacity: 1; }
+    .dw-nav a.on { background: rgba(127,127,127,.28); opacity: 1; }
+    .dw-embedded .dw-nav { display: none; }
+  </style>
+  <nav class="dw-nav"><a href="/">Dryer</a><a href="/washer">Washer</a><a href="/all">All</a></nav>
+  <script>
+    if (window.top !== window.self) document.documentElement.classList.add("dw-embedded");
+    document.querySelectorAll(".dw-nav a").forEach(a => {
+      if (a.getAttribute("href") === location.pathname) a.classList.add("on");
+    });
+  </script>`;
+
+function withNav(html) {
+  return html.replace("<body>", "<body>" + navBar);
+}
+
 // Web version of WasherTimerView.swift, shown at "/washer"
-const washerPage = fs.readFileSync(path.join(__dirname, "washer.html"), "utf8");
+const washerPage = withNav(fs.readFileSync(path.join(__dirname, "washer.html"), "utf8"));
+
+// Dryer board, washer page and reports together, shown at "/all"
+const allPage = withNav(fs.readFileSync(path.join(__dirname, "all.html"), "utf8"));
 
 // Maintenance reports sent from the washer page (kept in memory for now,
 // so they reset whenever Render restarts the server)
@@ -192,6 +218,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === "/all" && req.method === "GET") {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.writeHead(200);
+    res.end(allPage);
+    return;
+  }
+
   if (req.url === "/reports" && req.method === "GET") {
     res.setHeader("Content-Type", "application/json");
     res.writeHead(200);
@@ -231,7 +264,7 @@ const server = http.createServer((req, res) => {
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.writeHead(200);
-  res.end(boardPage);
+  res.end(withNav(boardPage));
 });
 
 server.listen(port, () => {
