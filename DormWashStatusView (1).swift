@@ -79,6 +79,7 @@ final class LaundryStatusViewModel: ObservableObject {
     @Published var isLoading = false
 
     private var countdownTask: Task<Void, Never>?
+    private var runningStage: LaundryStage = .drying   // stage to go back to when a new cycle starts
 
     init() {
         // Sample data shown until the server answers (or if it can't be reached).
@@ -121,16 +122,20 @@ final class LaundryStatusViewModel: ObservableObject {
         }
     }
 
+    /// Counts down one second. At 0:00 the cycle shows "Done" for a moment,
+    /// then the next cycle starts again from the full time (e.g. 45:00).
     private func tick() {
-        guard var current = cycle, current.remaining > 0 else {
-            if cycle != nil {
-                cycle?.stage = .done
-                cycle?.remaining = 0
-            }
-            countdownTask?.cancel()
-            return
+        guard var current = cycle else { return }
+        if current.stage == .done {
+            current.stage = runningStage
+            current.remaining = current.totalDuration
+        } else if current.remaining > 1 {
+            current.remaining -= 1
+        } else {
+            runningStage = current.stage
+            current.stage = .done
+            current.remaining = 0
         }
-        current.remaining -= 1
         cycle = current
     }
 
