@@ -117,7 +117,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       machineName: "Washer 3B",
       stage: "Washing",
-      remainingSeconds: 1590,
+      remainingSeconds: 1690,
       totalSeconds: 2700
     }));
     return;
