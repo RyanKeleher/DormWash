@@ -39,17 +39,49 @@ struct LaundryCycle {
     }
 }
 
+// MARK: - Server
+
+/// The DormWash server running on Render.
+enum DormWashAPI {
+    static let baseURL = URL(string: "https://dormwash-nv6w.onrender.com")!
+
+    /// Shape of the JSON returned by GET /machines
+    struct MachineResponse: Decodable {
+        let machineName: String
+        let stage: String
+        let remainingSeconds: Int
+        let totalSeconds: Int?
+    }
+
+    static func fetchCycle() async throws -> LaundryCycle {
+        let url = baseURL.appendingPathComponent("machines")
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        let machine = try JSONDecoder().decode(MachineResponse.self, from: data)
+        return LaundryCycle(
+            machineName: machine.machineName,
+            stage: LaundryStage(rawValue: machine.stage) ?? .washing,
+            totalDuration: TimeInterval(machine.totalSeconds ?? 45 * 60),
+            remaining: TimeInterval(machine.remainingSeconds)
+        )
+    }
+}
+
 // MARK: - View Model
 
 @MainActor
 final class LaundryStatusViewModel: ObservableObject {
     @Published var cycle: LaundryCycle?
     @Published var hasActiveCycle: Bool = true
+    @Published var isLive = false        // true once data has come from the server
+    @Published var isLoading = false
 
     private var countdownTask: Task<Void, Never>?
 
     init() {
-        // Sample data — replace with real machine/session data.
+        // Sample data shown until the server answers (or if it can't be reached).
         cycle = LaundryCycle(
             machineName: "Washer 3B",
             stage: .washing,
@@ -57,6 +89,22 @@ final class LaundryStatusViewModel: ObservableObject {
             remaining: 27 * 60 + 15
         )
         startCountdown()
+        Task { await refresh() }
+    }
+
+    /// Loads the current cycle from the server. Keeps the existing data if the request fails.
+    /// Note: the free Render server can take ~50 seconds to wake up after being idle.
+    func refresh() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            cycle = try await DormWashAPI.fetchCycle()
+            isLive = true
+            startCountdown()
+        } catch {
+            isLive = false
+            print("Could not reach DormWash server: \(error.localizedDescription)")
+        }
     }
 
     /// Swift 6-safe countdown loop. Since this class is @MainActor,
@@ -120,6 +168,7 @@ struct DormWashStatusView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 40)
             }
+            .refreshable { await viewModel.refresh() }   // pull down to reload from the server
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Dorm Wash")
             .navigationBarTitleDisplayMode(.large)
@@ -136,6 +185,13 @@ struct DormWashStatusView: View {
                     .foregroundStyle(.secondary)
                 Text("Here's your laundry")
                     .font(.title2.weight(.semibold))
+                Label(
+                    viewModel.isLoading ? "Connecting to server…"
+                        : viewModel.isLive ? "Live from server" : "Offline — showing sample data",
+                    systemImage: viewModel.isLive ? "antenna.radiowaves.left.and.right" : "wifi.slash"
+                )
+                .font(.caption)
+                .foregroundStyle(viewModel.isLive ? Color.green : Color.secondary)
             }
             Spacer()
         }
