@@ -154,9 +154,12 @@ DormWash/
 ### 1. Clone the repository
 
 ```bash
+cd ~
 git clone https://github.com/RyanKeleher/DormWash.git
 cd DormWash
 ```
+
+If Git says the `DormWash` folder already exists, see [Troubleshooting](#troubleshooting).
 
 ### 2. Run the iOS app
 
@@ -194,12 +197,15 @@ node -v
 
 If your Node version is wrong, install nvm ([nvm-windows](https://github.com/coreybutler/nvm-windows) on Windows). After cloning, run `nvm install` and `nvm use` from the repository root (the version is read from `.nvmrc`). On nvm-windows, run `nvm install 22` and `nvm use 22` instead.
 
-1. Clone the `main` branch.
+1. Clone the `main` branch. Start from your home folder (or any folder that doesn't already have a `DormWash` folder in it), and run the two lines one at a time so you can see the clone finish before you `cd`:
 
 ```
+cd ~
 git clone --branch main https://github.com/RyanKeleher/DormWash.git
 cd DormWash
 ```
+
+Check that you're in the right place: `ls` (or `dir` on Windows) should list `package.json`, `server.js` and `Tests`. If it doesn't, see [Troubleshooting](#troubleshooting) below.
 
 There is nothing to `npm install`. The page tests use Node's built-in test runner and only Node's built-in modules.
 
@@ -250,6 +256,31 @@ npm test
 You should see `ℹ tests 31` and `ℹ pass 31` at the end. The tests work on macOS, Windows, and Linux. They start the real `server.js` locally, so no phone, simulator, Xcode, or Render account is needed. On Windows, run the commands in PowerShell, Git Bash, or Command Prompt.
 
 > **Windows PowerShell:** if you see *"npm.ps1 cannot be loaded because running scripts is disabled on this system"*, type `npm.cmd` instead of `npm` (for example `npm.cmd test` or `npm.cmd run test:washer`), or allow local scripts once with `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+### Troubleshooting
+
+**`fatal: destination path 'DormWash' already exists and is not an empty directory.`**
+
+You already have a `DormWash` folder where you're cloning, so Git downloaded nothing. If you run `cd DormWash` next anyway, you end up in that old folder (or a folder inside it), not a fresh copy. Pick one fix:
+
+- Update the copy you have, if it's a clone of this repo: `cd DormWash`, then `git pull`.
+- Or set the old folder aside and clone fresh:
+
+  ```
+  mv DormWash DormWash-old
+  git clone --branch main https://github.com/RyanKeleher/DormWash.git
+  cd DormWash
+  ```
+
+  On Windows Command Prompt, use `ren DormWash DormWash-old` instead of `mv`.
+
+**`npm error enoent Could not read package.json`**
+
+You're not in the repository's top folder. Look at the path in the error: it should end in `DormWash/package.json`. Run `ls` (or `dir`) and check for `package.json`. If it isn't there, `cd` up a level or into the right folder, or follow the fix above for a fresh clone. On a Mac, folder names ignore capital letters, so `cd DormWash` can land you in a different folder with a similar name.
+
+**`node --test` doesn't find any tests, or the test command errors on `*.test.js`**
+
+Your Node is older than 22. Check with `node -v`, then update Node (see the nvm note above).
 
 ---
 
