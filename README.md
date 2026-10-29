@@ -291,7 +291,9 @@ The live server is at **https://dormwash-nv6w.onrender.com**.
 | Method | Endpoint | Returns |
 |---|---|---|
 | `GET` | `/` | The live board web page |
+| `GET` | `/hall` | The Laundry Room page: every washer and dryer and whether it's free, running or done |
 | `GET` | `/machines` | The current cycle as JSON |
+| `GET` | `/machines/all` | Every machine as JSON: `id`, `name`, `type`, `status`, and `remainingSeconds` / `totalSeconds` while running |
 | `GET` | `/status` | A health check: `{"message": "DormWash server is running"}` |
 
 **Example: `GET /machines`**
