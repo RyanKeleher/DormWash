@@ -84,9 +84,9 @@ Three questions drove our research:
 
 | | Feature | Where |
 |---|---|---|
-|  | **Live cycle status**: the status screen loads the current cycle from the server and counts it down, with pull-to-refresh and a live/offline indicator | `DormWashStatusView (1).swift` |
-|  | **Washer screen**: animated drum with the cycle time and a *Smart Cycle Prediction* toggle (a mock-up that adds 5 minutes) | `WasherTimerView.swift` |
-|  | **Report a Problem**: pick an issue (won't start, leaking, won't drain, door stuck, other), add details, and the form checks the input before sending | `WasherTimerView.swift` |
+|  | **Live cycle status**: the status screen loads the current cycle from the server and counts it down, with pull-to-refresh and a live/offline indicator | `appComponents/DormWashStatusView.swift` |
+|  | **Washer screen**: animated drum with the cycle time and a *Smart Cycle Prediction* toggle (a mock-up that adds 5 minutes) | `appComponents/WasherTimerView.swift` |
+|  | **Report a Problem**: pick an issue (won't start, leaking, won't drain, door stuck, other), add details, and the form checks the input before sending | `appComponents/WasherTimerView.swift` |
 |  | **Live web board**: a countdown page anyone can open in a browser at [dormwash-nv6w.onrender.com](https://dormwash-nv6w.onrender.com) | `server.js` |
 |  | **Automated checks**: every push builds the iOS code, runs its unit tests, and smoke-tests the server | `.github/workflows/ci-cd.yml` |
 
@@ -121,13 +121,18 @@ flowchart LR
 
 ```
 DormWash/
-├── WasherTimerView.swift            # Washer screen + Report a Problem form + request validation
-├── DormWashStatusView (1).swift     # Main status screen, live countdown, server connection
+├── appComponents/                   # Every screen, in Swift and as a web page
+│   ├── WasherTimerView.swift        # Washer screen + Report a Problem form + request validation
+│   ├── DormWashStatusView.swift     # Main status screen, live countdown, server connection
+│   ├── dryer.html                   # Dryer web page, shown at "/"
+│   ├── washer.html                  # Washer web page, shown at "/washer"
+│   └── all.html                     # Dryer, washer and reports on one screen, shown at "/all"
 ├── Package.swift                    # Lets Xcode and CI build the Swift code as a package
 ├── Tests/
-│   └── DormWashTests/               # Unit tests for validation, timers, and view models
-├── server.js                        # The live server on Render (web board + /machines + /status)
-├── package.json                     # Start script for server.js
+│   ├── DormWashTests/               # Swift unit tests for validation, timers, and view models
+│   └── web/                         # Tests for the web pages: all.test.js, washer.test.js, dryer.test.js
+├── server.js                        # The live server on Render (web pages + /machines + /reports + /status)
+├── package.json                     # Start and test scripts for server.js
 ├── server/                          # Express API for maintenance reports (tested in CI)
 │   ├── index.js
 │   ├── smoke-test.js
@@ -156,7 +161,7 @@ cd DormWash
 ### 2. Run the iOS app
 
 1. In Xcode, choose **File → Open…** and select the `DormWash` folder. It opens as a Swift package.
-2. Open `DormWashStatusView (1).swift` or `WasherTimerView.swift` and use the **Canvas** (Option+Cmd+Return) to preview the screens.
+2. Open `appComponents/DormWashStatusView.swift` or `appComponents/WasherTimerView.swift` and use the **Canvas** (Option+Cmd+Return) to preview the screens.
 3. Press **Cmd+U** to run the unit tests.
 
 ### 3. Run the server locally
@@ -166,6 +171,12 @@ npm start
 ```
 
 Then open [http://localhost:3000](http://localhost:3000) to see the live board.
+
+To test the All, Washer and Dryer pages (no install needed):
+
+```bash
+npm test     # runs Tests/web/all.test.js, washer.test.js and dryer.test.js
+```
 
 To run the maintenance-report API and its tests:
 
@@ -218,11 +229,12 @@ Every push and pull request runs the [CI/CD workflow](.github/workflows/ci-cd.ym
 |---|---|
 | **iOS build & tests** | Builds the SwiftUI code on a Mac runner and runs the unit tests in `Tests/DormWashTests` on an iPhone simulator |
 | **Server smoke test** | Installs the server in `server/` and checks every endpoint with `npm test` |
-| **Deploy** | Runs only on `main`, after both checks pass. It packages the server as a downloadable build, and redeploys on Render if a `RENDER_DEPLOY_HOOK_URL` repository secret is set |
+| **Web page tests** | Starts `server.js` and runs the All, Washer and Dryer page tests in `Tests/web` |
+| **Deploy** | Runs only on `main`, after all checks pass. It packages the server as a downloadable build, and redeploys on Render if a `RENDER_DEPLOY_HOOK_URL` repository secret is set |
 
 Render also redeploys `server.js` automatically whenever `main` changes.
 
-> When you add a new `.swift` file, add its name to `sources` in `Package.swift` so CI builds it.
+> When you add a new `.swift` file to `appComponents/`, add its name to `sources` in `Package.swift` so CI builds it.
 
 ---
 
@@ -243,7 +255,7 @@ git status
 git diff
 
 # 4. Stage and commit
-git add WasherTimerView.swift
+git add appComponents/WasherTimerView.swift
 git commit -m "feat: describe your change"
 
 # 5. Push your branch

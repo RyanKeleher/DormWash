@@ -3,6 +3,7 @@
 # CI (every push and pull request):
 #   - ios:    builds the SwiftUI code and runs the unit tests on an iPhone simulator
 #   - server: installs the Node server and runs its smoke test
+#   - web:    tests the All, Washer and Dryer pages served by server.js
 #
 # CD (only after both pass on main):
 #   - deploy: packages the server as a downloadable build, and redeploys it
@@ -81,9 +82,23 @@ jobs:
       - name: Run smoke test
         run: npm test
 
+  web:
+    name: Web page tests (all, washer, dryer)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run page tests
+        run: npm test
+
   deploy:
     name: Deploy
-    needs: [ios, server]
+    needs: [ios, server, web]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10

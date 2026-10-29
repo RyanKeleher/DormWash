@@ -25,14 +25,17 @@ function withNav(html) {
   return html.replace("<body>", "<body>" + navBar);
 }
 
+// The web pages live in appComponents/ next to the Swift screens
+const pagesDir = path.join(__dirname, "appComponents");
+
 // Web version of WasherTimerView.swift, shown at "/washer"
-const washerPage = withNav(fs.readFileSync(path.join(__dirname, "washer.html"), "utf8"));
+const washerPage = withNav(fs.readFileSync(path.join(pagesDir, "washer.html"), "utf8"));
 
 // Dryer page (a copy of the washer page, synced to the shared dryer cycle), shown at "/"
-const dryerPage = withNav(fs.readFileSync(path.join(__dirname, "dryer.html"), "utf8"));
+const dryerPage = withNav(fs.readFileSync(path.join(pagesDir, "dryer.html"), "utf8"));
 
 // Dryer page, washer page and reports together, shown at "/all"
-const allPage = withNav(fs.readFileSync(path.join(__dirname, "all.html"), "utf8"));
+const allPage = withNav(fs.readFileSync(path.join(pagesDir, "all.html"), "utf8"));
 
 // Maintenance reports sent from the washer and dryer pages (kept in memory for now,
 // so they reset whenever Render restarts the server)
