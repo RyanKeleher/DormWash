@@ -8,5 +8,8 @@
     "test:all": "node --test Tests/web/all.test.js",
     "test:washer": "node --test Tests/web/washer.test.js",
     "test:dryer": "node --test Tests/web/dryer.test.js"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
