@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { getMachines } = require("./machines");
 
 // Tabs added to the top of each page so you can switch between them.
 // They hide themselves when a page is shown inside the "/all" screen.
@@ -13,7 +14,7 @@ const navBar = `
     .dw-nav a.on { background: rgba(127,127,127,.28); opacity: 1; }
     .dw-embedded .dw-nav { display: none; }
   </style>
-  <nav class="dw-nav"><a href="/">Dryer</a><a href="/washer">Washer</a><a href="/all">All</a></nav>
+  <nav class="dw-nav"><a href="/">Dryer</a><a href="/washer">Washer</a><a href="/hall">Hall</a><a href="/all">All</a></nav>
   <script>
     if (window.top !== window.self) document.documentElement.classList.add("dw-embedded");
     document.querySelectorAll(".dw-nav a").forEach(a => {
@@ -33,6 +34,9 @@ const washerPage = withNav(fs.readFileSync(path.join(pagesDir, "washer.html"), "
 
 // Dryer page (a copy of the washer page, synced to the shared dryer cycle), shown at "/"
 const dryerPage = withNav(fs.readFileSync(path.join(pagesDir, "dryer.html"), "utf8"));
+
+// Every washer and dryer and whether it's free, running or done, shown at "/hall"
+const hallPage = withNav(fs.readFileSync(path.join(pagesDir, "hall.html"), "utf8"));
 
 // Dryer page, washer page and reports together, shown at "/all"
 const allPage = withNav(fs.readFileSync(path.join(pagesDir, "all.html"), "utf8"));
@@ -68,6 +72,20 @@ function secondsLeftInCycle() {
 }
 
 const server = http.createServer((req, res) => {
+  if (req.url === "/machines/all" && req.method === "GET") {
+    res.setHeader("Content-Type", "application/json");
+    res.writeHead(200);
+    res.end(JSON.stringify(getMachines()));
+    return;
+  }
+
+  if (req.url === "/hall" && req.method === "GET") {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.writeHead(200);
+    res.end(hallPage);
+    return;
+  }
+
   if (req.url === "/machines" && req.method === "GET") {
     res.setHeader("Content-Type", "application/json");
     res.writeHead(200);
