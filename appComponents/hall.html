@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DormWash · Laundry Room</title>
+  <!-- Every washer and dryer in the hall and whether it's free, running or done.
+       Shown at "/hall", reads from /machines/all -->
+  <style>
+    :root {
+      --bg: #f4f5f7; --card: #ffffff; --text: #16181d; --muted: #6b7280; --line: #e5e7eb;
+      --free: #16a34a; --running: #dc2626; --done: #2563eb; --track: #e5e7eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f1115; --card: #1a1d23; --text: #f3f4f6; --muted: #9ca3af; --line: #2c3038;
+        --free: #4ade80; --running: #f87171; --done: #60a5fa; --track: #2c3038; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex; flex-direction: column; align-items: center; padding: 32px 16px;
+    }
+    h1 { margin: 0 0 4px; font-size: 28px; }
+    .sub { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+
+    .summary { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--card);
+      border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot.free { background: var(--free); } .dot.running { background: var(--running); } .dot.done { background: var(--done); }
+
+    .section { width: 100%; max-width: 960px; margin-bottom: 24px; }
+    .section h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 10px 4px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+
+    .card { background: var(--card); border-radius: 18px; padding: 18px; border-top: 5px solid var(--line);
+      box-shadow: 0 4px 16px rgba(0,0,0,.07); display: flex; flex-direction: column; gap: 10px; }
+    .card.free { border-top-color: var(--free); }
+    .card.running { border-top-color: var(--running); }
+    .card.done { border-top-color: var(--done); }
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .name { font-weight: 700; font-size: 17px; }
+    .icon { font-size: 22px; }
+    .status { font-weight: 700; font-size: 14px; }
+    .card.free .status { color: var(--free); }
+    .card.running .status { color: var(--running); }
+    .card.done .status { color: var(--done); }
+    .time { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .note { color: var(--muted); font-size: 13px; }
+    .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+    .bar span { display: block; height: 100%; background: var(--running); }
+
+    .footer { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
+    .live.on { background: var(--free); }
+  </style>
+</head>
+<body>
+  <h1>Laundry Room</h1>
+  <p class="sub">See what's free before you make the trip</p>
+
+  <div class="summary" id="summary">
+    <span class="pill"><span class="dot free"></span><span id="freeCount">–</span> free</span>
+    <span class="pill"><span class="dot running"></span><span id="runningCount">–</span> running</span>
+    <span class="pill"><span class="dot done"></span><span id="doneCount">–</span> done</span>
+  </div>
+
+  <section class="section">
+    <h2>Washers</h2>
+    <div class="grid" id="washers"></div>
+  </section>
+
+  <section class="section">
+    <h2>Dryers</h2>
+    <div class="grid" id="dryers"></div>
+  </section>
+
+  <p class="footer"><span class="live" id="live"></span><span id="updated">Connecting…</span></p>
+
+  <script>
+    let machines = [];
+    let syncedAt = Date.now();   // when `machines` was loaded from the server
+    let loading = false;
+
+    function timeString(t) {
+      return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // Seconds left on a running machine, worked out from the clock so the
+    // countdown stays right even if the browser pauses the page.
+    function secondsLeft(machine, now) {
+      const elapsed = Math.floor((now - syncedAt) / 1000);
+      return Math.max(0, machine.remainingSeconds - elapsed);
+    }
+
+    function cardHtml(m, now) {
+      const icon = m.type === "washer" ? "🫧" : "🌀";
+      let body;
+      if (m.status === "running") {
+        const left = secondsLeft(m, now);
+        const done = Math.round(100 * (1 - left / m.totalSeconds));
+        body = `<div class="time">${timeString(left)}</div>
+                <div class="bar"><span style="width:${done}%"></span></div>
+                <div class="note">left in cycle</div>`;
+      } else if (m.status === "done") {
+        body = `<div class="note">Cycle finished, waiting for pickup</div>`;
+      } else {
+        body = `<div class="note">Available now</div>`;
+      }
+      const label = { free: "Free", running: "Running", done: "Done" }[m.status];
+      return `<div class="card ${m.status}" data-id="${escapeHtml(m.id)}">
+                <div class="card-top"><span class="name">${escapeHtml(m.name)}</span><span class="icon">${icon}</span></div>
+                <div class="status">${label}</div>
+                ${body}
+              </div>`;
+    }
+
+    function render() {
+      const now = Date.now();
+      document.getElementById("washers").innerHTML = machines.filter(m => m.type === "washer").map(m => cardHtml(m, now)).join("");
+      document.getElementById("dryers").innerHTML = machines.filter(m => m.type === "dryer").map(m => cardHtml(m, now)).join("");
+      const count = s => machines.filter(m => m.status === s).length;
+      document.getElementById("freeCount").textContent = count("free");
+      document.getElementById("runningCount").textContent = count("running");
+      document.getElementById("doneCount").textContent = count("done");
+    }
+
+    async function load() {
+      if (loading) return;
+      loading = true;
+      try {
+        const res = await fetch("/machines/all");
+        machines = await res.json();
+        syncedAt = Date.now();
+        document.getElementById("live").className = "live on";
+        document.getElementById("updated").textContent = "Live · updated " + new Date().toLocaleTimeString();
+        render();
+      } catch {
+        document.getElementById("live").className = "live";
+        document.getElementById("updated").textContent = "Can't reach the server — retrying…";
+      } finally {
+        loading = false;
+      }
+    }
+
+    // Tick the countdowns every second. When a cycle ends, ask the server what
+    // the machine is doing now. Re-sync every 30 seconds and when you come back to the tab.
+    setInterval(() => {
+      const now = Date.now();
+      if (machines.some(m => m.status === "running" && secondsLeft(m, now) === 0)) load();
+      else render();
+    }, 1000);
+    setInterval(load, 30000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") load(); });
+    load();
+  </script>
+</body>
+</html>
