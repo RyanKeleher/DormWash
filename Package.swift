@@ -19,7 +19,7 @@ let package = Package(
         .target(
             name: "DormWash",
             path: "appComponents",
-            exclude: ["washer.html", "dryer.html", "all.html"],
+            exclude: ["washer.html", "dryer.html", "all.html", "hall.html"],
             sources: [
                 "WasherTimerView.swift",
                 "DormWashStatusView.swift"
