@@ -172,12 +172,6 @@ npm start
 
 Then open [http://localhost:3000](http://localhost:3000) to see the live board.
 
-To test the All, Washer and Dryer pages (no install needed):
-
-```bash
-npm test     # runs Tests/web/all.test.js, washer.test.js and dryer.test.js
-```
-
 To run the maintenance-report API and its tests:
 
 ```bash
@@ -186,6 +180,23 @@ npm install
 npm test     # smoke-tests every endpoint
 npm start    # runs on http://localhost:3000
 ```
+
+### 4. Test the All, Washer and Dryer pages
+
+The page tests live in `Tests/web/` and need nothing installed beyond Node. Run them from the repo root:
+
+| Command | What it tests |
+|---|---|
+| `npm test` | All three pages |
+| `npm run test:all` | Just the All page (`Tests/web/all.test.js`): the embedded dryer and washer pages, the reports list, and rejected reports |
+| `npm run test:washer` | Just the Washer page (`Tests/web/washer.test.js`): the timer, form validation, and washer issues |
+| `npm run test:dryer` | Just the Dryer page (`Tests/web/dryer.test.js`): the shared `/machines` cycle, the countdown, and dryer issues |
+
+You can also run a single file with Node directly, for example `node --test Tests/web/washer.test.js`.
+
+Each file starts its own copy of `server.js`, so you don't need `npm start` running first. `Tests/web/helpers.js` holds the setup the three files share.
+
+> **Windows:** if PowerShell says *"npm.ps1 cannot be loaded because running scripts is disabled"*, type `npm.cmd` instead of `npm` (for example `npm.cmd run test:washer`), or allow local scripts once with `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 ---
 
