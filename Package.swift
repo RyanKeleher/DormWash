@@ -1,11 +1,11 @@
 // swift-tools-version:5.9
 //
 // Lets CI (and anyone on the team) build and test the DormWash SwiftUI
-// code without an .xcodeproj. It points at the Swift files where they
-// already live, so nothing has to be moved.
+// code without an .xcodeproj. The Swift screens live in appComponents/
+// alongside their web versions (the .html files, which Swift ignores).
 //
 // To open in Xcode: File > Open… and pick this folder (or Package.swift).
-// When you add a new .swift file to the repo, add its name to `sources` below.
+// When you add a new .swift file to appComponents/, add its name to `sources` below.
 
 import PackageDescription
 
@@ -18,14 +18,11 @@ let package = Package(
     targets: [
         .target(
             name: "DormWash",
-            path: ".",
-            exclude: [
-                "Tests", "server", "server.js", "package.json", "washer.html", "dryer.html", "all.html",
-                "README.md", "LICENSE"
-            ],
+            path: "appComponents",
+            exclude: ["washer.html", "dryer.html", "all.html"],
             sources: [
                 "WasherTimerView.swift",
-                "DormWashStatusView (1).swift"
+                "DormWashStatusView.swift"
             ]
         ),
         .testTarget(
