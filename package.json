@@ -7,7 +7,8 @@
     "test": "node --test \"Tests/web/*.test.js\"",
     "test:all": "node --test Tests/web/all.test.js",
     "test:washer": "node --test Tests/web/washer.test.js",
-    "test:dryer": "node --test Tests/web/dryer.test.js"
+    "test:dryer": "node --test Tests/web/dryer.test.js",
+    "test:hall": "node --test Tests/web/machines.test.js"
   },
   "engines": {
     "node": ">=22"
