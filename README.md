@@ -13,7 +13,7 @@ A laundry app for residence halls that lets students reserve a specific washer o
 ![Render](https://img.shields.io/badge/Hosted_on-Render-46E3B7?logo=render&logoColor=black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[**🔴 Live board**](https://dormwash-nv6w.onrender.com) · [Features](#-features) · [Getting started](#-getting-started) · [API](#-server-api) · [Contributing](#-contributing)
+[** Live board**](https://dormwash-nv6w.onrender.com) · [Features](#-features) · [Getting started](#-getting-started) · [API](#-server-api) · [Contributing](#-contributing)
 
 </div>
 
@@ -56,7 +56,7 @@ Students don't mind doing laundry; it's essential. What they mind is the uncerta
 
 ---
 
-## ❓ The Problem
+##  The Problem
 
 Three questions drove our research:
 
@@ -66,7 +66,7 @@ Three questions drove our research:
 
 ---
 
-## 👥 Who It's For
+##  Who It's For
 
 **Primary: residence hall students**, especially in dorms where machines are scarce compared to the number of residents and peak hours are competitive:
 
@@ -78,37 +78,37 @@ Three questions drove our research:
 
 ---
 
-## ✨ Features
+##  Features
 
 ### Available now
 
 | | Feature | Where |
 |---|---|---|
-| ⏱️ | **Live cycle status**: the status screen loads the current cycle from the server and counts it down, with pull-to-refresh and a live/offline indicator | `DormWashStatusView (1).swift` |
-| 🌀 | **Washer screen**: animated drum with the cycle time and a *Smart Cycle Prediction* toggle (a mock-up that adds 5 minutes) | `WasherTimerView.swift` |
-| 🛠️ | **Report a Problem**: pick an issue (won't start, leaking, won't drain, door stuck, other), add details, and the form checks the input before sending | `WasherTimerView.swift` |
-| 🌐 | **Live web board**: a countdown page anyone can open in a browser at [dormwash-nv6w.onrender.com](https://dormwash-nv6w.onrender.com) | `server.js` |
-| ✅ | **Automated checks**: every push builds the iOS code, runs its unit tests, and smoke-tests the server | `.github/workflows/ci-cd.yml` |
+|  | **Live cycle status**: the status screen loads the current cycle from the server and counts it down, with pull-to-refresh and a live/offline indicator | `DormWashStatusView (1).swift` |
+|  | **Washer screen**: animated drum with the cycle time and a *Smart Cycle Prediction* toggle (a mock-up that adds 5 minutes) | `WasherTimerView.swift` |
+|  | **Report a Problem**: pick an issue (won't start, leaking, won't drain, door stuck, other), add details, and the form checks the input before sending | `WasherTimerView.swift` |
+|  | **Live web board**: a countdown page anyone can open in a browser at [dormwash-nv6w.onrender.com](https://dormwash-nv6w.onrender.com) | `server.js` |
+|  | **Automated checks**: every push builds the iOS code, runs its unit tests, and smoke-tests the server | `.github/workflows/ci-cd.yml` |
 
 ### Planned
 
-- 📅 Book a specific washer or dryer for a set time slot
-- 🗺️ Live view of which machines in a hall are free, running, or done
-- 🔔 Reminders before pickup so machines get cleared promptly
-- 🚫 Cycle completion tracking to discourage machine-hogging
-- 📊 Usage data to help facilities staff spot broken or overused machines
+-  Book a specific washer or dryer for a set time slot
+-  Live view of which machines in a hall are free, running, or done
+-  Reminders before pickup so machines get cleared promptly
+-  Cycle completion tracking to discourage machine-hogging
+-  Usage data to help facilities staff spot broken or overused machines
 
 > **Note:** The current timer is a demo. The server runs a repeating 45-minute cycle for one sample machine (*Dryer 3B*), and maintenance reports are not yet sent anywhere real. The feature set will keep evolving as the project moves from product vision into design and development.
 
 ---
 
-## 🔧 How It Works
+##  How It Works
 
 ```mermaid
 flowchart LR
-    A["📱 iOS app<br/>(SwiftUI)"] <-- "/machines" --> S["☁️ DormWash server<br/>server.js on Render"]
-    B["🌐 Web browser"] <-- "live board" --> S
-    G["🐙 GitHub<br/>main branch"] -- "auto-deploy" --> S
+    A["📱 iOS app<br/>(SwiftUI)"] <-- "/machines" --> S[" DormWash server<br/>server.js on Render"]
+    B[" Web browser"] <-- "live board" --> S
+    G[" GitHub<br/>main branch"] -- "auto-deploy" --> S
 ```
 
 1. The **iOS app** and the **web board** both ask the server for the current cycle.
@@ -117,7 +117,7 @@ flowchart LR
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 DormWash/
@@ -138,7 +138,7 @@ DormWash/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -178,7 +178,7 @@ npm start    # runs on http://localhost:3000
 
 ---
 
-## 🔌 Server API
+##  Server API
 
 The live server is at **https://dormwash-nv6w.onrender.com**.
 
@@ -210,7 +210,7 @@ The Express API in `server/` adds endpoints for maintenance reports. It isn't de
 
 ---
 
-## 🔄 CI/CD
+##  CI/CD
 
 Every push and pull request runs the [CI/CD workflow](.github/workflows/ci-cd.yml) on GitHub Actions:
 
@@ -226,7 +226,7 @@ Render also redeploys `server.js` automatically whenever `main` changes.
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 We use a **branch → pull request → merge** workflow. Never commit straight to `main`.
 
@@ -251,12 +251,12 @@ git push -u origin my-feature
 ```
 
 6. On GitHub, click **Compare & pull request**, describe your change, and create the PR.
-7. Wait for the CI checks to pass ✅, get a teammate to review, then **Merge**.
+7. Wait for the CI checks to pass, get a teammate to review, then **Merge**.
 8. Render redeploys automatically after the merge.
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [x] Product vision and research questions
 - [x] Washer timer and Report a Problem screens
@@ -272,13 +272,13 @@ git push -u origin my-feature
 
 ---
 
-## 📄 License
+##  License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 ---
 
-## 📚 Sources
+##  Sources
 
 - A. Pratts and S. Moquino, "ADVICE COLUMN: Campus laundry is the college experience no one talks about," *Hilltop Views*, Oct. 12, 2025.
 - "Blocked," *Refinery29.com*, 2026.
@@ -288,6 +288,6 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <div align="center">
 
-Made with 🧺 by the DormWash team · [View contributors](https://github.com/RyanKeleher/DormWash/graphs/contributors)
+Made with by the DormWash team · [View contributors](https://github.com/RyanKeleher/DormWash/graphs/contributors)
 
 </div>
