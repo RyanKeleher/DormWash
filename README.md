@@ -148,7 +148,7 @@ DormWash/
 ### Prerequisites
 
 - **macOS with Xcode 15+** for the iOS app
-- **Node.js 18+** for the server
+- **Node.js 22 LTS+** for the server and its tests
 - **Git** and a code editor (VS Code works well)
 
 ### 1. Clone the repository
@@ -172,12 +172,6 @@ npm start
 
 Then open [http://localhost:3000](http://localhost:3000) to see the live board.
 
-To test the All, Washer and Dryer pages (no install needed):
-
-```bash
-npm test     # runs Tests/web/all.test.js, washer.test.js and dryer.test.js
-```
-
 To run the maintenance-report API and its tests:
 
 ```bash
@@ -186,6 +180,76 @@ npm install
 npm test     # smoke-tests every endpoint
 npm start    # runs on http://localhost:3000
 ```
+
+---
+
+##  Running the Unit Tests
+
+Install prerequisites. You need [Git](https://git-scm.com/) and Node.js 22 LTS or newer. Verify with:
+
+```
+git --version
+node -v
+```
+
+If your Node version is wrong, install nvm ([nvm-windows](https://github.com/coreybutler/nvm-windows) on Windows). After cloning, run `nvm install` and `nvm use` from the repository root (the version is read from `.nvmrc`). On nvm-windows, run `nvm install 22` and `nvm use 22` instead.
+
+1. Clone the `main` branch.
+
+```
+git clone --branch main https://github.com/RyanKeleher/DormWash.git
+cd DormWash
+```
+
+There is nothing to `npm install`. The page tests use Node's built-in test runner and only Node's built-in modules.
+
+2. Run all unit tests.
+
+```
+npm test
+```
+
+Expected: 31 passing tests across the three files in `Tests/web/`. Each file starts its own copy of `server.js` on a spare port, so you don't need `npm start` running first, and no internet connection is needed.
+
+3. Run only the All page tests.
+
+```
+npm run test:all
+```
+
+Expected: 10 passing tests. These check `/all` (`appComponents/all.html`): that it embeds the dryer and washer pages, lists maintenance reports from both machines, escapes report text, and rejects bad reports with the right message.
+
+4. Run only the Washer page tests.
+
+```
+npm run test:washer
+```
+
+Expected: 10 passing tests. These check `/washer` (`appComponents/washer.html`): the 45:00 timer and its `MM:SS` format, the Report a Problem validation rules, and that the server accepts every washer issue in the dropdown.
+
+5. Run only the Dryer page tests.
+
+```
+npm run test:dryer
+```
+
+Expected: 11 passing tests. These check `/` (`appComponents/dryer.html`) and `/machines`: the shared dryer cycle, the countdown and its restart at 45:00, and that the server accepts every dryer issue in the dropdown.
+
+You can also run any one file with Node directly, for example `node --test Tests/web/washer.test.js`. `Tests/web/helpers.js` holds the setup the three files share and isn't a test file itself.
+
+### Running the Tests on Another Computer
+
+Clone `main` and run the tests:
+
+```
+git clone --branch main https://github.com/RyanKeleher/DormWash.git
+cd DormWash
+npm test
+```
+
+You should see `ℹ tests 31` and `ℹ pass 31` at the end. The tests work on macOS, Windows, and Linux. They start the real `server.js` locally, so no phone, simulator, Xcode, or Render account is needed. On Windows, run the commands in PowerShell, Git Bash, or Command Prompt.
+
+> **Windows PowerShell:** if you see *"npm.ps1 cannot be loaded because running scripts is disabled on this system"*, type `npm.cmd` instead of `npm` (for example `npm.cmd test` or `npm.cmd run test:washer`), or allow local scripts once with `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 ---
 
