@@ -1,26 +1,21 @@
-const test = require("node:test");
-const assert = require("node:assert");
-const { spawn } = require("node:child_process");
+const { test, before, after } = require("node:test");
+const assert = require("node:assert/strict");
+const { startServer } = require("./helpers");
 
-test("DormWash server status endpoint works", async () => {
-  const port = 3456;
+let server;
 
-  const server = spawn("node", ["server.js"], {
-    env: {
-      ...process.env,
-      PORT: String(port)
-    }
-  });
+before(async () => {
+  server = await startServer(4105);
+});
 
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+after(() => server && server.stop());
 
-    const response = await fetch(`http://localhost:${port}/status`);
-    const data = await response.json();
+test("GET /status confirms the DormWash server is running", async () => {
+  const res = await fetch(`${server.base}/status`);
 
-    assert.equal(response.status, 200);
-    assert.equal(data.message, "DormWash server is running");
-  } finally {
-    server.kill();
-  }
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type"), /application\/json/);
+
+  const data = await res.json();
+  assert.equal(data.message, "DormWash server is running");
 });
