@@ -1,1 +1,181 @@
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * DormWash — CWE-862: Missing Authorization
+ * https://cwe.mitre.org/data/definitions/862.html
+ *
+ * "The product does not perform an authorization check when an actor
+ *  attempts to access a resource or perform an action."
+ *
+ * Context: DormWash's Reservation Service (one of our microservices).
+ * Students are AUTHENTICATED (logged in with their OU account), but the
+ * vulnerable version never checks whether they are AUTHORIZED to act on
+ * a specific reservation or machine.
+ *
+ * Compile & run:
+ *   javac DormWashAuthorizationDemo.java
+ *   java DormWashAuthorizationDemo
+ */
+public class DormWashAuthorizationDemo {
+
+    // ---------- Domain model ----------
+    enum Role { STUDENT, RA }   // RA = Resident Assistant (building admin)
+
+    static class User {
+        final String username;
+        final Role role;
+        User(String username, Role role) { this.username = username; this.role = role; }
+    }
+
+    static class Machine {
+        final String id;          // e.g. "W1" washer, "D1" dryer
+        boolean outOfService = false;
+        Machine(String id) { this.id = id; }
+        @Override public String toString() {
+            return id + (outOfService ? " [OUT OF SERVICE]" : " [available]");
+        }
+    }
+
+    static class Reservation {
+        final int id;
+        final String student;
+        String machineId;
+        LocalTime start;
+        Reservation(int id, String student, String machineId, LocalTime start) {
+            this.id = id; this.student = student; this.machineId = machineId; this.start = start;
+        }
+        @Override public String toString() {
+            return "Reservation#" + id + " [" + student + ", " + machineId + " @ " + start + "]";
+        }
+    }
+
+    // Shared data store for the Reservation Service
+    static final Map<Integer, Reservation> RESERVATIONS = new HashMap<>();
+    static final Map<String, Machine> MACHINES = new HashMap<>();
+
+    static void seed() {
+        RESERVATIONS.clear();
+        MACHINES.clear();
+        MACHINES.put("W1", new Machine("W1"));
+        MACHINES.put("D1", new Machine("D1"));
+        RESERVATIONS.put(101, new Reservation(101, "alice", "W1", LocalTime.of(19, 0)));
+        RESERVATIONS.put(102, new Reservation(102, "bob",   "D1", LocalTime.of(21, 0)));
+    }
+
+    // =====================================================================
+    // VULNERABLE: CWE-862 — the service never checks authorization
+    // =====================================================================
+    static class VulnerableReservationService {
+
+        // Any student can see anyone's reservation (leaks who does laundry when).
+        Reservation getReservation(User currentUser, int reservationId) {
+            return RESERVATIONS.get(reservationId);           // <-- no ownership check
+        }
+
+        // Any student can cancel someone else's reservation.
+        void cancelReservation(User currentUser, int reservationId) {
+            RESERVATIONS.remove(reservationId);               // <-- no ownership check
+        }
+
+        // Any student can take over someone else's time slot.
+        void reassignReservation(User currentUser, int reservationId, String newMachine) {
+            RESERVATIONS.get(reservationId).machineId = newMachine; // <-- no ownership check
+        }
+
+        // Any student can mark a machine out of service (RA-only action).
+        void setOutOfService(User currentUser, String machineId) {
+            MACHINES.get(machineId).outOfService = true;      // <-- no role check
+        }
+    }
+
+    // =====================================================================
+    // FIXED: every sensitive action checks authorization first
+    // =====================================================================
+    static class SecureReservationService {
+
+        /** The student who made the reservation, or an RA, may act on it. */
+        private Reservation requireOwnerOrRA(User currentUser, int reservationId) {
+            Reservation r = RESERVATIONS.get(reservationId);
+            if (r == null) {
+                throw new IllegalArgumentException("Reservation not found");
+            }
+            boolean isOwner = r.student.equals(currentUser.username);
+            boolean isRA = currentUser.role == Role.RA;
+            if (!isOwner && !isRA) {
+                throw new SecurityException("ACCESS DENIED: " + currentUser.username
+                        + " does not own reservation #" + reservationId);
+            }
+            return r;
+        }
+
+        /** Only RAs can manage machines. */
+        private void requireRA(User currentUser) {
+            if (currentUser.role != Role.RA) {
+                throw new SecurityException("ACCESS DENIED: RA role required");
+            }
+        }
+
+        Reservation getReservation(User currentUser, int reservationId) {
+            return requireOwnerOrRA(currentUser, reservationId);
+        }
+
+        void cancelReservation(User currentUser, int reservationId) {
+            requireOwnerOrRA(currentUser, reservationId);
+            RESERVATIONS.remove(reservationId);
+        }
+
+        void reassignReservation(User currentUser, int reservationId, String newMachine) {
+            Reservation r = requireOwnerOrRA(currentUser, reservationId);
+            if (!MACHINES.containsKey(newMachine)) {
+                throw new IllegalArgumentException("Unknown machine");
+            }
+            r.machineId = newMachine;
+        }
+
+        void setOutOfService(User currentUser, String machineId) {
+            requireRA(currentUser);
+            MACHINES.get(machineId).outOfService = true;
+        }
+    }
+
+    // ---------- Demo ----------
+    public static void main(String[] args) {
+        User bob = new User("bob", Role.STUDENT);   // the attacker
+        User ra  = new User("ra_jordan", Role.RA);
+
+        seed();
+        System.out.println("===== VULNERABLE DormWash (CWE-862) =====");
+        VulnerableReservationService vuln = new VulnerableReservationService();
+        System.out.println("Bob views Alice's reservation: " + vuln.getReservation(bob, 101));
+        vuln.reassignReservation(bob, 101, "D1");
+        System.out.println("Bob moves Alice's reservation: " + vuln.getReservation(bob, 101));
+        vuln.cancelReservation(bob, 101);
+        System.out.println("Bob cancels Alice's reservation. Still exists? " + RESERVATIONS.containsKey(101));
+        vuln.setOutOfService(bob, "W1");
+        System.out.println("Bob marks a washer out of service: " + MACHINES.get("W1"));
+
+        seed();
+        System.out.println("\n===== SECURE DormWash (authorization enforced) =====");
+        SecureReservationService secure = new SecureReservationService();
+        attempt("Bob views his own reservation",   () -> System.out.println(secure.getReservation(bob, 102)));
+        attempt("Bob views Alice's reservation",   () -> System.out.println(secure.getReservation(bob, 101)));
+        attempt("Bob moves Alice's reservation",   () -> secure.reassignReservation(bob, 101, "D1"));
+        attempt("Bob cancels Alice's reservation", () -> secure.cancelReservation(bob, 101));
+        attempt("Bob marks W1 out of service",     () -> secure.setOutOfService(bob, "W1"));
+        attempt("RA marks W1 out of service",      () -> secure.setOutOfService(ra, "W1"));
+        System.out.println("\nAlice's reservation after attacks: " + RESERVATIONS.get(101));
+        System.out.println("Machines: " + MACHINES.values());
+    }
+
+    private static void attempt(String label, Runnable action) {
+        System.out.print(label + " -> ");
+        try {
+            action.run();
+            System.out.println("   ALLOWED");
+        } catch (SecurityException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
