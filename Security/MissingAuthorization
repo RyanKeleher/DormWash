@@ -64,9 +64,6 @@ public class DormWashAuthorizationDemo {
         RESERVATIONS.put(102, new Reservation(102, "bob",   "D1", LocalTime.of(21, 0)));
     }
 
-    // =====================================================================
-    // VULNERABLE: CWE-862 — the service never checks authorization
-    // =====================================================================
     static class VulnerableReservationService {
 
         // Any student can see anyone's reservation (leaks who does laundry when).
